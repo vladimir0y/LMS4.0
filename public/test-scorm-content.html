@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SCORM Content</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            margin: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            width: 200px;
+        }
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.3);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 SCORM Content Test</h1>
+        
+        <div id="status" class="status">
+            <strong>Status:</strong> <span id="statusText">Not initialized</span>
+        </div>
+
+        <div class="controls">
+            <button id="initBtn" onclick="initializeSCORM()">Initialize SCORM</button>
+            <button id="finishBtn" onclick="finishSCORM()" disabled>Finish SCORM</button>
+            <button id="completeBtn" onclick="markComplete()" disabled>Mark Complete</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label>Score: </label>
+            <input type="number" id="scoreInput" placeholder="0-100" min="0" max="100" disabled>
+            <button onclick="setScore()" disabled id="setScoreBtn">Set Score</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label>Location: </label>
+            <input type="text" id="locationInput" placeholder="Bookmark location" disabled>
+            <button onclick="setLocation()" disabled id="setLocationBtn">Set Location</button>
+        </div>
+
+        <div style="margin: 20px 0;">
+            <label>Suspend Data: </label>
+            <input type="text" id="suspendInput" placeholder="Save state data" disabled>
+            <button onclick="setSuspendData()" disabled id="setSuspendBtn">Set Suspend Data</button>
+        </div>
+
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <div id="logs" class="status">
+            <strong>SCORM API Calls Log:</strong>
+            <div id="logContent" style="margin-top: 10px; font-family: monospace; font-size: 12px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let isInitialized = false;
+        let progress = 0;
+
+        function log(message) {
+            const logContent = document.getElementById('logContent');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<div>${timestamp}: ${message}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+            console.log('SCORM Test Content:', message);
+        }
+
+        function updateStatus(text, isSuccess = true) {
+            const statusEl = document.getElementById('statusText');
+            const statusDiv = document.getElementById('status');
+            statusEl.textContent = text;
+            statusDiv.className = isSuccess ? 'status success' : 'status error';
+        }
+
+        function updateProgress(value) {
+            progress = Math.min(100, Math.max(0, value));
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function checkAPI() {
+            if (window.API) {
+                log('✓ Found SCORM API 1.2');
+                return window.API;
+            } else if (window.API_1484_11) {
+                log('✓ Found SCORM API 2004');
+                return window.API_1484_11;
+            } else if (window.parent && window.parent.API) {
+                log('✓ Found SCORM API in parent window');
+                return window.parent.API;
+            } else if (window.parent && window.parent.API_1484_11) {
+                log('✓ Found SCORM API 2004 in parent window');
+                return window.parent.API_1484_11;
+            } else {
+                log('✗ No SCORM API found');
+                return null;
+            }
+        }
+
+        function initializeSCORM() {
+            const api = checkAPI();
+            if (!api) {
+                updateStatus('SCORM API not found', false);
+                return;
+            }
+
+            const result = api.LMSInitialize('');
+            if (result === 'true') {
+                isInitialized = true;
+                updateStatus('SCORM Initialized');
+                log('✓ LMSInitialize() returned: ' + result);
+                
+                // Enable controls
+                document.getElementById('initBtn').disabled = true;
+                document.getElementById('finishBtn').disabled = false;
+                document.getElementById('completeBtn').disabled = false;
+                document.getElementById('scoreInput').disabled = false;
+                document.getElementById('setScoreBtn').disabled = false;
+                document.getElementById('locationInput').disabled = false;
+                document.getElementById('setLocationBtn').disabled = false;
+                document.getElementById('suspendInput').disabled = false;
+                document.getElementById('setSuspendBtn').disabled = false;
+
+                // Get some initial values
+                const studentName = api.LMSGetValue('cmi.core.student_name');
+                const lessonStatus = api.LMSGetValue('cmi.core.lesson_status');
+                log(`Student: ${studentName}, Status: ${lessonStatus}`);
+                
+                updateProgress(25);
+            } else {
+                log('✗ LMSInitialize() failed: ' + result);
+                updateStatus('Initialize failed', false);
+            }
+        }
+
+        function setScore() {
+            if (!isInitialized) return;
+            
+            const api = checkAPI();
+            const score = document.getElementById('scoreInput').value;
+            
+            if (score && score >= 0 && score <= 100) {
+                const result = api.LMSSetValue('cmi.core.score.raw', score);
+                log(`Setting score to ${score}: ${result}`);
+                api.LMSCommit('');
+                updateProgress(Math.max(progress, parseInt(score)));
+            }
+        }
+
+        function setLocation() {
+            if (!isInitialized) return;
+            
+            const api = checkAPI();
+            const location = document.getElementById('locationInput').value;
+            
+            if (location) {
+                const result = api.LMSSetValue('cmi.core.lesson_location', location);
+                log(`Setting location to "${location}": ${result}`);
+                api.LMSCommit('');
+            }
+        }
+
+        function setSuspendData() {
+            if (!isInitialized) return;
+            
+            const api = checkAPI();
+            const data = document.getElementById('suspendInput').value;
+            
+            if (data) {
+                const result = api.LMSSetValue('cmi.suspend_data', data);
+                log(`Setting suspend data: ${result}`);
+                api.LMSCommit('');
+            }
+        }
+
+        function markComplete() {
+            if (!isInitialized) return;
+            
+            const api = checkAPI();
+            const result = api.LMSSetValue('cmi.core.lesson_status', 'completed');
+            log(`Marking lesson complete: ${result}`);
+            
+            if (result === 'true') {
+                updateStatus('Lesson Completed!');
+                updateProgress(100);
+                api.LMSCommit('');
+                
+                // Show completion message
+                setTimeout(() => {
+                    alert('🎉 Congratulations! You have completed the lesson. The parent application should now be notified.');
+                }, 500);
+            }
+        }
+
+        function finishSCORM() {
+            if (!isInitialized) return;
+            
+            const api = checkAPI();
+            const result = api.LMSFinish('');
+            log(`LMSFinish() returned: ${result}`);
+            
+            if (result === 'true') {
+                isInitialized = false;
+                updateStatus('SCORM Session Finished');
+                
+                // Disable controls
+                document.getElementById('finishBtn').disabled = true;
+                document.getElementById('completeBtn').disabled = true;
+                document.getElementById('scoreInput').disabled = true;
+                document.getElementById('setScoreBtn').disabled = true;
+                document.getElementById('locationInput').disabled = true;
+                document.getElementById('setLocationBtn').disabled = true;
+                document.getElementById('suspendInput').disabled = true;
+                document.getElementById('setSuspendBtn').disabled = true;
+                document.getElementById('initBtn').disabled = false;
+            }
+        }
+
+        // Auto-initialize if API is available
+        window.addEventListener('load', function() {
+            log('Test content loaded');
+            setTimeout(() => {
+                if (checkAPI()) {
+                    log('SCORM API detected, ready for initialization');
+                } else {
+                    log('Waiting for SCORM API to become available...');
+                    // Keep checking for API
+                    const checkInterval = setInterval(() => {
+                        if (checkAPI()) {
+                            clearInterval(checkInterval);
+                            log('SCORM API is now available!');
+                        }
+                    }, 500);
+                }
+            }, 100);
+        });
+
+        // Simulate some learning progress
+        let autoProgress = 0;
+        setInterval(() => {
+            if (isInitialized && progress < 90) {
+                autoProgress += Math.random() * 2;
+                updateProgress(Math.min(progress + 1, autoProgress));
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
