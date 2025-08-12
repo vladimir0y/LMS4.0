@@ -1,0 +1,400 @@
+@import "tailwindcss";
+
+/* Apple-like Design System Variables */
+:root {
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --card-background: #ffffff;
+  --border-color: #f5f5f7;
+  --muted-background: #fbfbfd;
+  --accent-background: #f5f5f7;
+  
+  /* Apple-inspired colors */
+  --apple-blue: #007aff;
+  --apple-blue-dark: #0056cc;
+  --apple-purple: #af52de;
+  --apple-gray: #8e8e93;
+  --apple-gray-light: #f2f2f7;
+  --apple-gray-dark: #1c1c1e;
+  
+  /* Progress bar colors */
+  --progress-bg: #f2f2f7;
+  --progress-fill: #007aff;
+  --progress-success: #34c759;
+  --progress-warning: #ff9500;
+  --progress-error: #ff3b30;
+  
+  /* Apple typography */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  
+  /* Animation durations - Apple-like */
+  --animation-fast: 200ms;
+  --animation-normal: 400ms;
+  --animation-slow: 600ms;
+  
+  /* Shadows - Apple style */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+@theme inline {
+  /* Core colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card-background);
+  --color-border: var(--border-color);
+  --color-muted: var(--muted-background);
+  --color-accent: var(--accent-background);
+  
+  /* Brand colors */
+  --color-brand-primary: #2563eb;
+  --color-brand-secondary: #7c3aed;
+  --color-brand-accent: #059669;
+  --color-brand-success: #16a34a;
+  --color-brand-warning: #d97706;
+  --color-brand-error: #dc2626;
+  --color-brand-info: #0891b2;
+  --color-brand-light: #f8fafc;
+  --color-brand-dark: #0f172a;
+  --color-brand-muted: #64748b;
+  
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  /* Shadows */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-progress: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lesson: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Animations */
+  --animate-progress: progress 1s ease-in-out;
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-pulse-soft: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card-background: #111111;
+    --border-color: #262626;
+    --muted-background: #171717;
+    --accent-background: #1f1f1f;
+    
+    --progress-bg: #374151;
+    --progress-fill: #3b82f6;
+    --progress-success: #22c55e;
+    --progress-warning: #f59e0b;
+    --progress-error: #ef4444;
+  }
+}
+
+/* Base styling */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Keyframes for animations */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--progress-width, 0%);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes progress-stripe {
+  0% {
+    background-position: 1rem 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom Utility Classes */
+
+/* Progress Bar Utilities */
+.progress-container {
+  @apply w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+  background-color: var(--progress-bg);
+  box-shadow: var(--tw-shadow-progress, inset 0 2px 4px 0 rgba(0, 0, 0, 0.1));
+}
+
+.progress-bar {
+  @apply h-2 bg-brand-primary rounded-full transition-all duration-300 ease-out;
+  background-color: var(--progress-fill);
+  transform-origin: left;
+}
+
+.progress-bar-sm {
+  @apply h-1;
+}
+
+.progress-bar-lg {
+  @apply h-3;
+}
+
+.progress-bar-xl {
+  @apply h-4;
+}
+
+.progress-bar-success {
+  background-color: var(--progress-success);
+}
+
+.progress-bar-warning {
+  background-color: var(--progress-warning);
+}
+
+.progress-bar-error {
+  background-color: var(--progress-error);
+}
+
+.progress-bar-animated {
+  @apply animate-progress;
+}
+
+.progress-bar-striped {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: progress-stripe 1s linear infinite;
+}
+
+/* Card Shadow Utilities */
+.card-shadow {
+  @apply shadow-card;
+  transition: box-shadow var(--animation-normal) ease;
+}
+
+.card-shadow:hover {
+  @apply shadow-card-hover;
+}
+
+.card-shadow-soft {
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card-shadow-medium {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-shadow-strong {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-shadow-lesson {
+  @apply shadow-lesson;
+}
+
+/* Interactive Elements */
+.interactive-element {
+  @apply transition-all duration-300 ease-out;
+}
+
+.interactive-element:hover {
+  @apply transform -translate-y-1;
+}
+
+.interactive-element:active {
+  @apply transform translate-y-0;
+}
+
+/* Focus States */
+.focus-visible {
+  @apply focus:outline-none focus:ring-2 focus:ring-brand-primary/50;
+}
+
+/* Loading States */
+.loading-skeleton {
+  @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  background: linear-gradient(
+    90deg,
+    var(--muted-background) 25%,
+    var(--accent-background) 50%,
+    var(--muted-background) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading-shimmer 2s infinite;
+}
+
+/* Glassmorphism Effects */
+.glass {
+  @apply backdrop-blur-sm bg-white/80 dark:bg-black/50 border border-white/20;
+}
+
+.glass-strong {
+  @apply backdrop-blur-md bg-white/90 dark:bg-black/70 border border-white/30;
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent;
+}
+
+.gradient-text-accent {
+  @apply bg-gradient-to-r from-brand-accent to-brand-info bg-clip-text text-transparent;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--muted-background);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--progress-fill);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--progress-success);
+}
+
+/* Typography Enhancements for Lesson Content */
+.prose-lesson {
+  @apply max-w-none text-foreground;
+}
+
+.prose-lesson h1,
+.prose-lesson h2,
+.prose-lesson h3,
+.prose-lesson h4,
+.prose-lesson h5,
+.prose-lesson h6 {
+  @apply text-foreground font-bold mb-4;
+}
+
+.prose-lesson p {
+  @apply text-foreground/90 mb-4 leading-relaxed;
+}
+
+.prose-lesson strong {
+  @apply text-foreground font-semibold;
+}
+
+.prose-lesson code:not(pre code) {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-medium text-brand-primary;
+}
+
+.prose-lesson pre {
+  @apply rounded-lg shadow-sm bg-muted border border-border p-4;
+}
+
+.prose-lesson blockquote {
+  @apply rounded-r-lg my-6 border-l-4 border-brand-primary/30 bg-brand-light/50 p-4;
+}
+
+/* Animation Utilities */
+.animate-fade-in {
+  @apply animate-fade-in;
+}
+
+.animate-slide-up {
+  @apply animate-slide-up;
+}
+
+.animate-pulse-soft {
+  @apply animate-pulse-soft;
+}
+
+/* Responsive Typography */
+.text-responsive-sm {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  .print-break-after {
+    page-break-after: always;
+  }
+}
